@@ -1,0 +1,26 @@
+# Python / local runtime
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*$py.class
+
+# Local scratch and agent planning artifacts
+tmp/
+.reasonix/
+task_plan.md
+progress.md
+findings.md
+docs/superpowers/
+
+# Heavy or reproducible crawl/render intermediates
+data/raw/pages/
+output/rendered_pages/
+output/pdf/
+
+# Historical or local-only deliverables
+data/raw/douban_top250_raw.csv
+output/logs/*legacy*
+output/报告/*Top250*
+output/运行结果.txt
+报告模版.pdf

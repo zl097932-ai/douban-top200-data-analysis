@@ -1,0 +1,243 @@
+{
+  "generated_at": "2026-06-27T10:41:37+08:00",
+  "quality": {
+    "input_records": 200,
+    "dropped_invalid_records": 0,
+    "duplicate_rank_removed": 0,
+    "duplicate_title_year_removed": 0,
+    "output_records": 200,
+    "missing_year_after_cleaning": 0,
+    "missing_country_after_cleaning": 0,
+    "missing_genre_after_cleaning": 0,
+    "rating_range": [
+      8.5,
+      9.7
+    ],
+    "rank_is_unique": true
+  },
+  "overall": {
+    "movie_count": 200,
+    "average_rating": 9.011,
+    "median_rating": 9.0,
+    "min_rating": 8.5,
+    "max_rating": 9.7,
+    "total_rating_count": 188548326,
+    "year_min": 1936,
+    "year_max": 2023,
+    "rating_log_count_correlation": 0.085,
+    "rating_log_count_pearson_p_value": 0.23375532572596658,
+    "rating_log_count_spearman_rho": 0.073,
+    "rating_log_count_spearman_p_value": 0.3069512993926279,
+    "rank_rating_spearman_rho": -0.706,
+    "rank_rating_spearman_p_value": 1.6147852175454588e-31
+  },
+  "top_genres": [
+    {
+      "genre": "剧情",
+      "count": 150
+    },
+    {
+      "genre": "喜剧",
+      "count": 44
+    },
+    {
+      "genre": "爱情",
+      "count": 43
+    },
+    {
+      "genre": "冒险",
+      "count": 41
+    },
+    {
+      "genre": "奇幻",
+      "count": 39
+    },
+    {
+      "genre": "犯罪",
+      "count": 36
+    },
+    {
+      "genre": "动画",
+      "count": 34
+    },
+    {
+      "genre": "惊悚",
+      "count": 27
+    },
+    {
+      "genre": "悬疑",
+      "count": 25
+    },
+    {
+      "genre": "动作",
+      "count": 23
+    },
+    {
+      "genre": "科幻",
+      "count": 15
+    },
+    {
+      "genre": "家庭",
+      "count": 14
+    }
+  ],
+  "top_countries": [
+    {
+      "country": "美国",
+      "count": 110
+    },
+    {
+      "country": "英国",
+      "count": 28
+    },
+    {
+      "country": "日本",
+      "count": 28
+    },
+    {
+      "country": "中国香港",
+      "count": 24
+    },
+    {
+      "country": "中国大陆",
+      "count": 22
+    },
+    {
+      "country": "法国",
+      "count": 16
+    },
+    {
+      "country": "韩国",
+      "count": 11
+    },
+    {
+      "country": "意大利",
+      "count": 9
+    },
+    {
+      "country": "德国",
+      "count": 7
+    },
+    {
+      "country": "中国台湾",
+      "count": 6
+    },
+    {
+      "country": "加拿大",
+      "count": 6
+    },
+    {
+      "country": "新西兰",
+      "count": 3
+    }
+  ],
+  "decades": [
+    {
+      "decade": 1930,
+      "movie_count": 2,
+      "average_rating": 9.3
+    },
+    {
+      "decade": 1950,
+      "movie_count": 5,
+      "average_rating": 9.3
+    },
+    {
+      "decade": 1960,
+      "movie_count": 4,
+      "average_rating": 9.1
+    },
+    {
+      "decade": 1970,
+      "movie_count": 4,
+      "average_rating": 9.225
+    },
+    {
+      "decade": 1980,
+      "movie_count": 15,
+      "average_rating": 9.127
+    },
+    {
+      "decade": 1990,
+      "movie_count": 49,
+      "average_rating": 9.065
+    },
+    {
+      "decade": 2000,
+      "movie_count": 60,
+      "average_rating": 8.982
+    },
+    {
+      "decade": 2010,
+      "movie_count": 58,
+      "average_rating": 8.907
+    },
+    {
+      "decade": 2020,
+      "movie_count": 3,
+      "average_rating": 9.033
+    }
+  ],
+  "top_movies": [
+    {
+      "rank": 1,
+      "title": "肖申克的救赎",
+      "rating": 9.7,
+      "rating_count": 3298535
+    },
+    {
+      "rank": 2,
+      "title": "霸王别姬",
+      "rating": 9.6,
+      "rating_count": 2434082
+    },
+    {
+      "rank": 19,
+      "title": "控方证人",
+      "rating": 9.6,
+      "rating_count": 749474
+    },
+    {
+      "rank": 3,
+      "title": "泰坦尼克号",
+      "rating": 9.5,
+      "rating_count": 2509821
+    },
+    {
+      "rank": 4,
+      "title": "阿甘正传",
+      "rating": 9.5,
+      "rating_count": 2439595
+    },
+    {
+      "rank": 7,
+      "title": "美丽人生",
+      "rating": 9.5,
+      "rating_count": 1487921
+    },
+    {
+      "rank": 11,
+      "title": "辛德勒的名单",
+      "rating": 9.5,
+      "rating_count": 1251754
+    },
+    {
+      "rank": 108,
+      "title": "茶馆",
+      "rating": 9.5,
+      "rating_count": 213117
+    },
+    {
+      "rank": 161,
+      "title": "背靠背，脸对脸",
+      "rating": 9.5,
+      "rating_count": 183184
+    },
+    {
+      "rank": 170,
+      "title": "高山下的花环",
+      "rating": 9.5,
+      "rating_count": 163747
+    }
+  ]
+}

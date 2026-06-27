@@ -1,0 +1,15 @@
+{
+  "input_records": 200,
+  "dropped_invalid_records": 0,
+  "duplicate_rank_removed": 0,
+  "duplicate_title_year_removed": 0,
+  "output_records": 200,
+  "missing_year_after_cleaning": 0,
+  "missing_country_after_cleaning": 0,
+  "missing_genre_after_cleaning": 0,
+  "rating_range": [
+    8.5,
+    9.7
+  ],
+  "rank_is_unique": true
+}
