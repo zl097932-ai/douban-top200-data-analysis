@@ -2,6 +2,15 @@
 
 本项目分析了豆瓣电影 Top250 公开榜单前 200 部影片，重点展示榜单电影的评分分布、类型结构、国家/地区来源、年代分布和排名关系。仓库后半部分提供完整可复现流程，可以从已保存原始数据重新生成清洗数据、图表和报告。
 
+## Download Release
+
+原始 CSV 和展示版报告已放在 GitHub Release 中，适合直接下载查看：
+
+- [Release: Douban Top200 results and reproducible dataset](https://github.com/zl097932-ai/douban-top200-data-analysis/releases/tag/v1.0.0-results)
+- `douban_top200_raw.csv`：原始榜单 CSV，用于离线复现。
+- `douban_top200_github_showcase_report.pdf`：结果展示版 PDF。
+- `douban_top200_github_showcase_report.docx`：可编辑的结果展示版 Word。
+
 ## Results At A Glance
 
 当前数据集包含 **200** 部电影，年份跨度为 **1936-2023**，平均评分为 **9.01**，累计评价人数约 **1.89 亿**。
@@ -60,6 +69,8 @@
 | `output/figures/` | 7 张分析图表 |
 | `output/报告/豆瓣电影Top200数据分析报告_GitHub展示版.docx` | 面向 GitHub 展示的 Word 报告 |
 | `output/报告/豆瓣电影Top200数据分析报告_GitHub展示版.pdf` | 面向 GitHub 展示的 PDF 报告 |
+
+常用交付文件也已整理到 [Release assets](https://github.com/zl097932-ai/douban-top200-data-analysis/releases/tag/v1.0.0-results)，其中包含原始 CSV、展示版 PDF 和展示版 Word。
 
 ## Reproducible Workflow
 
