@@ -266,61 +266,47 @@ def build_report() -> Path:
     subtitle = doc.add_paragraph()
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
     subtitle.paragraph_format.space_after = Pt(16)
-    run = subtitle.add_run("Python 数据采集、清洗、可视化与自动化报告生成")
+    run = subtitle.add_run("结果展示在前，复现流程在后")
     set_run_font(run, 12, False, MUTED)
 
-    add_key_value_table(
+    doc.add_heading("1. 结果总览", level=1)
+    add_paragraph(
         doc,
-        [
-            ("项目类型", "端到端数据分析管道 / 课程项目展示版"),
-            ("数据对象", "豆瓣电影 Top250 公开榜单前 200 部影片"),
-            ("核心技术", "requests, BeautifulSoup4, pandas, scipy, matplotlib, python-docx, pytest"),
-            ("展示版本", "去除个人身份信息，仅保留项目过程、结果和工程化说明"),
-        ],
+        "本项目分析豆瓣电影 Top250 公开榜单前 200 部影片，重点呈现评分分布、类型结构、国家/地区来源、年代分布和排名关系。下表为本次数据快照的核心结果。",
     )
-
-    doc.add_heading("1. 项目亮点", level=1)
-    add_bullets(
-        doc,
-        [
-            "端到端实现公开榜单采集、HTML 解析、字段清洗、统计分析、可视化和报告生成。",
-            "支持离线复现：基于已保存 CSV 可重建清洗数据、图表和报告。",
-            "对记录数、排名唯一性、关键字段缺失和重复项进行质量核验。",
-            "输出课程提交版与 GitHub 展示版两套报告，兼顾作业提交和项目展示。",
-            "使用 pytest 覆盖页面解析、数据清洗、拆分和统计摘要等核心逻辑。",
-        ],
-    )
-
-    doc.add_heading("2. 数据管道设计", level=1)
-    add_key_value_table(
-        doc,
-        [
-            ("采集层", "分页访问公开榜单页面，解析排名、片名、年份、国家/地区、类型、评分和评价人数。"),
-            ("清洗层", "统一字段类型，处理多值字段，移除重复项，并输出一电影一行的主表。"),
-            ("分析层", "生成评分、类型、国家/地区、年代和相关关系统计。"),
-            ("输出层", "保存 CSV/JSON、PNG 图表、Word 报告和 PDF 报告。"),
-        ],
-    )
-
-    doc.add_heading("3. 关键结果", level=1)
     add_key_value_table(
         doc,
         [
             ("电影数量", f"{len(movies)} 部"),
             ("年份跨度", f"{int(movies['year'].min())}-{int(movies['year'].max())}"),
             ("平均评分", f"{movies['rating'].mean():.2f}"),
+            ("中位评分", f"{movies['rating'].median():.2f}"),
             ("评分范围", f"{movies['rating'].min():.1f}-{movies['rating'].max():.1f}"),
             ("累计评价人数", f"{int(movies['rating_count'].sum()):,}"),
+            ("出现最多的类型", str(data["top_genres"].index[0])),
+            ("出现最多的国家/地区", str(data["top_countries"].index[0])),
             ("数量最多的年代", f"{int(decades.sort_values('movie_count', ascending=False).iloc[0]['decade'])} 年代"),
         ],
     )
 
-    doc.add_heading("4. 类别与地区观察", level=1)
+    doc.add_heading("2. 主要发现", level=1)
+    add_bullets(
+        doc,
+        [
+            "Top200 电影评分集中在 8.8-9.3 区间，整体评分水平很高。",
+            "剧情片出现 150 次，是榜单中最突出的类型标签。",
+            "美国电影出现 110 次，在国家/地区来源中占比最高。",
+            "1990 年代、2000 年代和 2010 年代影片构成榜单主体，其中 2000 年代数量最多。",
+            "排名越靠前评分整体越高；评分与评价人数之间的线性相关性较弱。",
+        ],
+    )
+
+    doc.add_heading("3. 类型与地区结构", level=1)
     add_paragraph(doc, "类型分布显示，剧情片是 Top200 中最主要的标签，喜剧、爱情、冒险、奇幻和犯罪等类型也具有较高出现频次。国家/地区分布中，美国电影数量最多，日本、英国、中国香港、中国大陆和法国等也形成较明显的代表性。")
     add_category_matrix(doc, data["top_genres"], data["top_countries"])
 
     doc.add_section(WD_SECTION_START.NEW_PAGE)
-    doc.add_heading("5. 可视化结果", level=1)
+    doc.add_heading("4. 可视化结果", level=1)
     figures = [
         ("01_评分分布.png", "图 1 Top200 电影评分分布"),
         ("02_热门电影类型.png", "图 2 热门电影类型出现次数"),
@@ -333,24 +319,50 @@ def build_report() -> Path:
         doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
         add_caption(doc, caption)
 
-    doc.add_heading("6. 工程化与复现", level=1)
+    doc.add_heading("5. 项目输出", level=1)
     add_key_value_table(
         doc,
         [
-            ("复现入口", "run_pipeline.py --skip-fetch 可基于本地原始 CSV 重建结果。"),
-            ("展示报告", "scripts/build_github_showcase_report.py 可单独重建本展示版 Word。"),
-            ("测试方式", "python -m pytest -q"),
-            ("文档补充", "README.md、docs/project_overview.md、docs/data_dictionary.md"),
+            ("清洗数据", "data/processed/movies_clean.csv"),
+            ("类型展开表", "data/processed/movies_by_genre.csv"),
+            ("国家/地区展开表", "data/processed/movies_by_country.csv"),
+            ("统计摘要", "data/processed/analysis_summary.json"),
+            ("分析图表", "output/figures/*.png"),
+            ("展示报告", "GitHub 展示版 DOCX/PDF"),
         ],
     )
 
-    doc.add_heading("7. 局限性与后续方向", level=1)
+    doc.add_section(WD_SECTION_START.NEW_PAGE)
+    doc.add_heading("6. 可复现操作", level=1)
+    add_key_value_table(
+        doc,
+        [
+            ("安装依赖", "python -m venv .venv；.venv\\Scripts\\python.exe -m pip install -r requirements.txt"),
+            ("离线复现", "python run_pipeline.py --skip-fetch --student-name ... --student-id ... --class-name ..."),
+            ("重新采集", "python run_pipeline.py --fetch --student-name ... --student-id ... --class-name ..."),
+            ("重建展示报告", "python scripts/build_github_showcase_report.py"),
+            ("运行测试", "python -m pytest -q"),
+        ],
+    )
+
+    doc.add_heading("7. 项目实现说明", level=1)
+    add_key_value_table(
+        doc,
+        [
+            ("采集层", "分页访问公开榜单页面，解析排名、片名、年份、国家/地区、类型、评分和评价人数。"),
+            ("清洗层", "统一字段类型，处理多值字段，移除重复项，并输出一电影一行的主表。"),
+            ("分析层", "生成评分、类型、国家/地区、年代和相关关系统计。"),
+            ("输出层", "保存 CSV/JSON、PNG 图表、Word 报告和 PDF 报告。"),
+        ],
+    )
+
+    doc.add_heading("8. 局限性", level=1)
     add_bullets(
         doc,
         [
             "榜单数据代表公开页面的一次快照，不能直接外推到全部电影市场。",
             "类型与国家/地区为多值字段，当前按出现次数统计。",
-            "后续可加入交互式看板、自动化 CI、配置化运行和更丰富的文本分析。",
+            "当前项目以探索性分析为主，后续可加入交互式看板、自动化 CI 和更丰富的文本分析。",
         ],
     )
 
