@@ -25,7 +25,6 @@ BLACK = "000000"
 LIGHT_GRAY = "F2F2F2"
 BODY = BLACK
 MUTED = BLACK
-FONT_LATIN = "宋体"
 FONT_CJK = "宋体"
 MODEL_DISPLAY_NAMES = {
     "Baseline mean rating": "平均分基线",
@@ -34,11 +33,22 @@ MODEL_DISPLAY_NAMES = {
 }
 
 
+def set_rfonts(r_pr) -> None:
+    r_fonts = r_pr.find(qn("w:rFonts"))
+    if r_fonts is None:
+        r_fonts = OxmlElement("w:rFonts")
+        r_pr.insert(0, r_fonts)
+    for key in list(r_fonts.attrib):
+        local_name = key.rsplit("}", 1)[-1].lower()
+        if local_name.endswith("theme"):
+            del r_fonts.attrib[key]
+    for attr in ("ascii", "hAnsi", "eastAsia", "cs"):
+        r_fonts.set(qn(f"w:{attr}"), FONT_CJK)
+
+
 def set_run_font(run, size: float | None = None, bold: bool | None = None, color: str | None = None) -> None:
-    run.font.name = FONT_LATIN
-    run._element.rPr.rFonts.set(qn("w:ascii"), FONT_LATIN)
-    run._element.rPr.rFonts.set(qn("w:hAnsi"), FONT_LATIN)
-    run._element.rPr.rFonts.set(qn("w:eastAsia"), FONT_CJK)
+    run.font.name = FONT_CJK
+    set_rfonts(run._element.get_or_add_rPr())
     if size is not None:
         run.font.size = Pt(size)
     if bold is not None:
@@ -47,10 +57,12 @@ def set_run_font(run, size: float | None = None, bold: bool | None = None, color
 
 
 def set_style(style, size: float, color: str, bold: bool, before: float, after: float, line_spacing: float) -> None:
-    style.font.name = FONT_LATIN
-    style._element.rPr.rFonts.set(qn("w:ascii"), FONT_LATIN)
-    style._element.rPr.rFonts.set(qn("w:hAnsi"), FONT_LATIN)
-    style._element.rPr.rFonts.set(qn("w:eastAsia"), FONT_CJK)
+    style.font.name = FONT_CJK
+    r_pr = style._element.rPr
+    if r_pr is None:
+        r_pr = OxmlElement("w:rPr")
+        style._element.append(r_pr)
+    set_rfonts(r_pr)
     style.font.size = Pt(size)
     style.font.bold = bold
     style.font.color.rgb = RGBColor.from_string(color)
@@ -157,6 +169,16 @@ def add_bullets(doc: Document, items: Iterable[str]) -> None:
         paragraph.paragraph_format.line_spacing = 1.1
         run = paragraph.add_run(item)
         set_run_font(run, 10.5, False, BODY)
+
+
+def add_report_heading(doc: Document, text: str, level: int = 1) -> None:
+    sizes = {1: 16, 2: 13, 3: 12}
+    paragraph = doc.add_paragraph(style=f"Heading {level}")
+    paragraph.paragraph_format.space_before = Pt({1: 16, 2: 12, 3: 8}.get(level, 8))
+    paragraph.paragraph_format.space_after = Pt({1: 8, 2: 6, 3: 4}.get(level, 4))
+    paragraph.paragraph_format.line_spacing = 1.1
+    run = paragraph.add_run(text)
+    set_run_font(run, sizes.get(level, 12), True, BLACK)
 
 
 def add_key_value_table(doc: Document, rows: list[tuple[str, str]], widths: list[float] | None = None) -> None:
@@ -378,7 +400,7 @@ def build_report() -> Path:
     run = subtitle.add_run("基于公开榜单数据的描述统计、分组比较与可复现建模")
     set_run_font(run, 12, False, BLACK)
 
-    doc.add_heading("1. 研究对象与结论摘要", level=1)
+    add_report_heading(doc, "1. 研究对象与结论摘要", level=1)
     add_paragraph(
         doc,
         "本报告使用仓库内保存的豆瓣电影 Top250 公开榜单前 200 部影片作为样本，分析对象为影片排名、上映年份、国家/地区、类型、评分和评价人数等字段。数据口径为一部电影一条主记录；类型和国家/地区属于多值字段，在分布统计中按展开后的出现次数计算。",
@@ -403,7 +425,7 @@ def build_report() -> Path:
         ],
     )
 
-    doc.add_heading("2. 数据质量与统计口径", level=1)
+    add_report_heading(doc, "2. 数据质量与统计口径", level=1)
     add_paragraph(
         doc,
         "清洗过程保留了 200 条有效记录，排名字段唯一，年份、国家/地区和类型字段均无清洗后缺失。由于榜单电影常同时属于多个类型或多个制片地区，后续类型与地区统计采用展开表：同一部电影可能在多个标签下各计一次，因此这些次数用于描述结构，不等同于互斥分类占比。",
@@ -423,7 +445,7 @@ def build_report() -> Path:
         ],
     )
 
-    doc.add_heading("3. 评分分布分析", level=1)
+    add_report_heading(doc, "3. 评分分布分析", level=1)
     add_paragraph(
         doc,
         f"评分分布集中在 8.8-9.3 分之间。样本最低分为 {overall['min_rating']:.1f}，最高分为 {overall['max_rating']:.1f}，标准差只有 {rating_stats['std']:.2f}，说明榜单内部评分差异相对有限。若只看均值，容易忽略这种“高分样本内部再排序”的特点，因此下面按评分区间拆分观察。",
@@ -438,7 +460,7 @@ def build_report() -> Path:
         "从区间分布看，8.8-9.0 分影片最多，9.1-9.3 分次之，9.4 分以上影片数量明显减少。这种分布说明 Top200 影片整体质量接近，但头部高分影片仍具有较强区分度。",
     )
 
-    doc.add_heading("4. 类型、地区与年代分析", level=1)
+    add_report_heading(doc, "4. 类型、地区与年代分析", level=1)
     findings = [
         f"剧情片出现 {int(data['top_genres'].iloc[0])} 次，是样本中最突出的类型标签。",
         f"美国电影出现 {int(data['top_countries'].iloc[0])} 次，是国家/地区来源中的最高频标签。",
@@ -470,7 +492,7 @@ def build_report() -> Path:
     add_matrix_table(doc, ["年代", "电影数量", "平均评分"], decade_rows, [2.1, 1.6, 2.8])
 
     doc.add_section(WD_SECTION_START.NEW_PAGE)
-    doc.add_heading("5. 排名、评价人数与评分关系", level=1)
+    add_report_heading(doc, "5. 排名、评价人数与评分关系", level=1)
     add_paragraph(
         doc,
         f"排名与评分的 Spearman 秩相关系数为 {overall['rank_rating_spearman_rho']:.3f}，p 值为 {format_p_value(overall['rank_rating_spearman_p_value'])}。由于排名数字越小表示位置越靠前，负相关说明评分越高的电影通常排名越靠前，这与榜单排序逻辑一致。",
@@ -486,7 +508,7 @@ def build_report() -> Path:
     add_matrix_table(doc, ["排名", "影片", "评分", "评价人数"], popular_rows, [0.8, 3.1, 0.9, 1.7])
 
     if ml_summary:
-        doc.add_heading("6. 机器学习补充分析", level=1)
+        add_report_heading(doc, "6. 机器学习补充分析", level=1)
         model_summary = ml_summary["model_summary"]
         relative_improvement = model_summary["mae_improvement_vs_baseline"] / model_summary["baseline_mae"] * 100
         add_paragraph(
@@ -505,7 +527,7 @@ def build_report() -> Path:
 
         doc.add_section(WD_SECTION_START.NEW_PAGE)
 
-    doc.add_heading("7. 可视化结果", level=1)
+    add_report_heading(doc, "7. 可视化结果", level=1)
     figures = [
         ("01_评分分布.png", "图 1 Top200 电影评分分布"),
         ("02_热门电影类型.png", "图 2 热门电影类型出现次数"),
@@ -526,7 +548,7 @@ def build_report() -> Path:
         doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
         add_caption(doc, caption)
 
-    doc.add_heading("8. 项目输出与可复现操作", level=1)
+    add_report_heading(doc, "8. 项目输出与可复现操作", level=1)
     add_paragraph(doc, "仓库保留了原始数据、清洗数据、统计摘要、机器学习摘要、图表和报告生成脚本。复现时既可以使用仓库内保存的原始 CSV 离线生成结果，也可以重新访问公开榜单页面刷新数据。")
     add_key_value_table(
         doc,
@@ -554,7 +576,7 @@ def build_report() -> Path:
         ],
     )
 
-    doc.add_heading("9. 项目实现说明", level=1)
+    add_report_heading(doc, "9. 项目实现说明", level=1)
     add_key_value_table(
         doc,
         [
@@ -566,7 +588,7 @@ def build_report() -> Path:
         ],
     )
 
-    doc.add_heading("10. 局限性与改进方向", level=1)
+    add_report_heading(doc, "10. 局限性与改进方向", level=1)
     add_bullets(
         doc,
         [
