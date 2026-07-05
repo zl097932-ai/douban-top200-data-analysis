@@ -181,6 +181,52 @@ def add_report_heading(doc: Document, text: str, level: int = 1) -> None:
     set_run_font(run, sizes.get(level, 12), True, BLACK)
 
 
+def add_table_of_contents(doc: Document) -> None:
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title.paragraph_format.space_before = Pt(12)
+    title.paragraph_format.space_after = Pt(12)
+    run = title.add_run("目录")
+    set_run_font(run, 16, True, BLACK)
+
+    paragraph = doc.add_paragraph()
+    paragraph.paragraph_format.space_after = Pt(6)
+    paragraph.paragraph_format.line_spacing = 1.15
+    run = paragraph.add_run()
+
+    begin = OxmlElement("w:fldChar")
+    begin.set(qn("w:fldCharType"), "begin")
+
+    instruction = OxmlElement("w:instrText")
+    instruction.set(qn("xml:space"), "preserve")
+    instruction.text = ' TOC \\o "1-3" \\h \\z \\u '
+
+    separate = OxmlElement("w:fldChar")
+    separate.set(qn("w:fldCharType"), "separate")
+
+    placeholder = OxmlElement("w:t")
+    placeholder.text = "请在 Word 中右键更新目录，或使用 Ctrl+A 后按 F9 更新全部域。"
+
+    end = OxmlElement("w:fldChar")
+    end.set(qn("w:fldCharType"), "end")
+
+    run._r.append(begin)
+    run._r.append(instruction)
+    run._r.append(separate)
+    run._r.append(placeholder)
+    run._r.append(end)
+    set_run_font(run, 11, False, BLACK)
+
+
+def set_update_fields_on_open(doc: Document) -> None:
+    settings = doc.settings.element
+    update_fields = settings.find(qn("w:updateFields"))
+    if update_fields is None:
+        update_fields = OxmlElement("w:updateFields")
+        settings.insert(0, update_fields)
+    update_fields.set(qn("w:val"), "true")
+
+
 def add_key_value_table(doc: Document, rows: list[tuple[str, str]], widths: list[float] | None = None) -> None:
     widths = widths or [1.8, 4.7]
     table = doc.add_table(rows=1, cols=2)
@@ -400,6 +446,9 @@ def build_report() -> Path:
     run = subtitle.add_run("基于公开榜单数据的描述统计、分组比较与可复现建模")
     set_run_font(run, 12, False, BLACK)
 
+    add_table_of_contents(doc)
+    doc.add_section(WD_SECTION_START.NEW_PAGE)
+
     add_report_heading(doc, "1. 研究对象与结论摘要", level=1)
     add_paragraph(
         doc,
@@ -601,6 +650,7 @@ def build_report() -> Path:
     )
 
     REPORT.parent.mkdir(parents=True, exist_ok=True)
+    set_update_fields_on_open(doc)
     doc.save(REPORT)
     return REPORT
 
