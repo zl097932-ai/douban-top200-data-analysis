@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.crawler import parse_top250_html
+from src.ml_extension import build_feature_matrix, infer_cluster_profile, translate_feature_name
 from src.processing import build_summary, clean_movies, normalize_country_name
 
 
@@ -48,3 +49,40 @@ def test_clean_movies_keeps_missing_original_title_blank() -> None:
     clean, _, _, _ = clean_movies(raw)
     assert clean.loc[0, "original_title"] == ""
     assert "nan" not in clean["original_title"].tolist()
+
+
+def test_ml_feature_matrix_uses_numeric_and_multivalue_features() -> None:
+    movies = pd.DataFrame(
+        [
+            {"rank": 1, "title": "甲", "year": 1994, "country_text": "美国", "genre_text": "剧情 / 犯罪", "rating": 9.5, "rating_count": 1000},
+            {"rank": 2, "title": "乙", "year": 2001, "country_text": "中国大陆 / 中国香港", "genre_text": "喜剧", "rating": 8.8, "rating_count": 500},
+        ]
+    )
+    genres = pd.DataFrame(
+        [
+            {"rank": 1, "genre": "剧情"},
+            {"rank": 1, "genre": "犯罪"},
+            {"rank": 2, "genre": "喜剧"},
+        ]
+    )
+    countries = pd.DataFrame(
+        [
+            {"rank": 1, "country": "美国"},
+            {"rank": 2, "country": "中国大陆"},
+            {"rank": 2, "country": "中国香港"},
+        ]
+    )
+    features, target, top_genres, top_countries = build_feature_matrix(movies, genres, countries)
+    assert list(target) == [9.5, 8.8]
+    assert "log_rating_count" in features.columns
+    assert "genre_剧情" in features.columns
+    assert "country_中国香港" in features.columns
+    assert top_genres[0] == "剧情"
+    assert top_countries[0] == "美国"
+
+
+def test_ml_display_helpers_keep_labels_readable() -> None:
+    assert translate_feature_name("genre_count") == "类型标签数"
+    assert translate_feature_name("genre_剧情") == "类型：剧情"
+    profile = infer_cluster_profile(pd.Series([3, 2], index=["悬疑", "惊悚"]), pd.Series([4], index=["美国"]))
+    assert profile == "悬疑惊悚与犯罪片"

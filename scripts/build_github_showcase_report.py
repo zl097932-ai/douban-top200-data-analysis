@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Iterable
 
@@ -28,6 +29,11 @@ BODY = "333333"
 MUTED = "666666"
 FONT_LATIN = "Calibri"
 FONT_CJK = "Microsoft YaHei"
+MODEL_DISPLAY_NAMES = {
+    "Baseline mean rating": "平均分基线",
+    "Ridge regression": "岭回归",
+    "Random forest": "随机森林",
+}
 
 
 def set_run_font(run, size: float | None = None, bold: bool | None = None, color: str | None = None) -> None:
@@ -185,6 +191,36 @@ def add_category_matrix(doc: Document, genres: pd.Series, countries: pd.Series) 
     style_table(table, [1.8, 1.2, 2.1, 1.4])
 
 
+def add_ml_model_table(doc: Document, models: dict[str, dict[str, float]]) -> None:
+    table = doc.add_table(rows=1, cols=4)
+    table.style = "Table Grid"
+    headers = ["模型", "MAE", "RMSE", "R²"]
+    for cell, header in zip(table.rows[0].cells, headers):
+        cell.text = header
+    for model_name, values in models.items():
+        cells = table.add_row().cells
+        cells[0].text = MODEL_DISPLAY_NAMES.get(model_name, model_name)
+        cells[1].text = f"{values['mae_mean']:.4f}"
+        cells[2].text = f"{values['rmse_mean']:.4f}"
+        cells[3].text = f"{values['r2_mean']:.4f}"
+    style_table(table, [2.4, 1.3, 1.3, 1.5])
+
+
+def add_cluster_profile_table(doc: Document, profiles: list[dict]) -> None:
+    table = doc.add_table(rows=1, cols=4)
+    table.style = "Table Grid"
+    headers = ["分群画像", "数量", "平均评分", "代表影片"]
+    for cell, header in zip(table.rows[0].cells, headers):
+        cell.text = header
+    for profile in profiles:
+        cells = table.add_row().cells
+        cells[0].text = str(profile["profile"])
+        cells[1].text = str(profile["movie_count"])
+        cells[2].text = f"{profile['average_rating']:.3f}"
+        cells[3].text = str(profile["example_titles"])
+    style_table(table, [1.6, 0.8, 0.9, 3.2])
+
+
 def add_page_number(paragraph) -> None:
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run = paragraph.add_run("第 ")
@@ -218,6 +254,8 @@ def load_data() -> dict:
     genres = pd.read_csv(PROCESSED / "movies_by_genre.csv", encoding="utf-8-sig")
     countries = pd.read_csv(PROCESSED / "movies_by_country.csv", encoding="utf-8-sig")
     decades = pd.read_csv(PROCESSED / "decade_summary.csv", encoding="utf-8-sig")
+    ml_summary_path = PROCESSED / "ml_summary.json"
+    ml_summary = json.loads(ml_summary_path.read_text(encoding="utf-8")) if ml_summary_path.exists() else None
     return {
         "movies": movies,
         "genres": genres,
@@ -225,6 +263,7 @@ def load_data() -> dict:
         "decades": decades,
         "top_genres": genres["genre"].value_counts().head(8),
         "top_countries": countries["country"].value_counts().head(8),
+        "ml_summary": ml_summary,
     }
 
 
@@ -250,6 +289,7 @@ def build_report() -> Path:
     data = load_data()
     movies = data["movies"]
     decades = data["decades"]
+    ml_summary = data["ml_summary"]
 
     doc = Document()
     configure_document(doc)
@@ -290,23 +330,43 @@ def build_report() -> Path:
     )
 
     doc.add_heading("2. 主要发现", level=1)
-    add_bullets(
-        doc,
-        [
-            "Top200 电影评分集中在 8.8-9.3 区间，整体评分水平很高。",
-            "剧情片出现 150 次，是榜单中最突出的类型标签。",
-            "美国电影出现 110 次，在国家/地区来源中占比最高。",
-            "1990 年代、2000 年代和 2010 年代影片构成榜单主体，其中 2000 年代数量最多。",
-            "排名越靠前评分整体越高；评分与评价人数之间的线性相关性较弱。",
-        ],
-    )
+    findings = [
+        "Top200 电影评分集中在 8.8-9.3 区间，整体评分水平很高。",
+        "剧情片出现 150 次，是榜单中最突出的类型标签。",
+        "美国电影出现 110 次，在国家/地区来源中占比最高。",
+        "1990 年代、2000 年代和 2010 年代影片构成榜单主体，其中 2000 年代数量最多。",
+        "排名越靠前评分整体越高；评分与评价人数之间的线性相关性较弱。",
+    ]
+    if ml_summary:
+        model_summary = ml_summary["model_summary"]
+        findings.append(
+            f"机器学习扩展中，{MODEL_DISPLAY_NAMES.get(model_summary['best_model'], model_summary['best_model'])} 的 5 折交叉验证 MAE 为 {model_summary['best_mae']:.4f}，优于平均分基线 {model_summary['baseline_mae']:.4f}。"
+        )
+        findings.append("KMeans 分群形成华语剧情、欧美剧情、悬疑惊悚、动画奇幻等电影画像，可作为结果展示补充。")
+    add_bullets(doc, findings)
 
     doc.add_heading("3. 类型与地区结构", level=1)
     add_paragraph(doc, "类型分布显示，剧情片是 Top200 中最主要的标签，喜剧、爱情、冒险、奇幻和犯罪等类型也具有较高出现频次。国家/地区分布中，美国电影数量最多，日本、英国、中国香港、中国大陆和法国等也形成较明显的代表性。")
     add_category_matrix(doc, data["top_genres"], data["top_countries"])
 
     doc.add_section(WD_SECTION_START.NEW_PAGE)
-    doc.add_heading("4. 可视化结果", level=1)
+    if ml_summary:
+        doc.add_heading("4. 机器学习探索", level=1)
+        model_summary = ml_summary["model_summary"]
+        add_paragraph(
+            doc,
+            "该扩展使用年份、距今年数、评价人数对数、类型标签数、国家/地区数，以及热门类型和国家/地区的多热编码，进行评分预测和电影画像分群。由于样本量只有 200 条且评分范围较窄，模型定位为探索性分析，不作为真实评分预测服务。",
+        )
+        add_ml_model_table(doc, model_summary["models"])
+        add_paragraph(
+            doc,
+            "特征重要性显示，评价人数（对数）、上映年份、距今年数和类型标签数对模型误差影响最大，说明榜单内评分差异与热度、年代及类型结构存在一定关系。",
+        )
+        add_cluster_profile_table(doc, ml_summary["cluster_profiles"])
+
+        doc.add_section(WD_SECTION_START.NEW_PAGE)
+
+    doc.add_heading("5. 可视化结果", level=1)
     figures = [
         ("01_评分分布.png", "图 1 Top200 电影评分分布"),
         ("02_热门电影类型.png", "图 2 热门电影类型出现次数"),
@@ -314,12 +374,20 @@ def build_report() -> Path:
         ("04_不同年代电影数量.png", "图 4 不同年代电影数量"),
         ("07_排名与评分关系.png", "图 5 排名与评分关系"),
     ]
+    if ml_summary:
+        figures.extend(
+            [
+                ("08_机器学习评分预测对比.png", "图 6 机器学习评分预测 MAE 对比"),
+                ("09_机器学习特征重要性.png", "图 7 随机森林置换特征重要性"),
+                ("10_电影画像分群.png", "图 8 电影画像分群二维投影"),
+            ]
+        )
     for file_name, caption in figures:
         doc.add_picture(str(FIGURES / file_name), width=Inches(5.9))
         doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
         add_caption(doc, caption)
 
-    doc.add_heading("5. 项目输出", level=1)
+    doc.add_heading("6. 项目输出", level=1)
     add_key_value_table(
         doc,
         [
@@ -327,42 +395,48 @@ def build_report() -> Path:
             ("类型展开表", "data/processed/movies_by_genre.csv"),
             ("国家/地区展开表", "data/processed/movies_by_country.csv"),
             ("统计摘要", "data/processed/analysis_summary.json"),
+            ("机器学习摘要", "data/processed/ml_summary.json"),
+            ("电影分群结果", "data/processed/movie_ml_clusters.csv"),
             ("分析图表", "output/figures/*.png"),
             ("展示报告", "GitHub 展示版 DOCX/PDF"),
         ],
     )
 
     doc.add_section(WD_SECTION_START.NEW_PAGE)
-    doc.add_heading("6. 可复现操作", level=1)
+    doc.add_heading("7. 可复现操作", level=1)
     add_key_value_table(
         doc,
         [
             ("安装依赖", "python -m venv .venv；.venv\\Scripts\\python.exe -m pip install -r requirements.txt"),
             ("离线复现", "python run_pipeline.py --skip-fetch --student-name ... --student-id ... --class-name ..."),
             ("重新采集", "python run_pipeline.py --fetch --student-name ... --student-id ... --class-name ..."),
+            ("运行 ML 扩展", "python scripts/run_ml_extension.py"),
             ("重建展示报告", "python scripts/build_github_showcase_report.py"),
             ("运行测试", "python -m pytest -q"),
         ],
     )
 
-    doc.add_heading("7. 项目实现说明", level=1)
+    doc.add_heading("8. 项目实现说明", level=1)
     add_key_value_table(
         doc,
         [
             ("采集层", "分页访问公开榜单页面，解析排名、片名、年份、国家/地区、类型、评分和评价人数。"),
             ("清洗层", "统一字段类型，处理多值字段，移除重复项，并输出一电影一行的主表。"),
             ("分析层", "生成评分、类型、国家/地区、年代和相关关系统计。"),
+            ("建模层", "执行评分预测交叉验证、随机森林特征重要性分析和 KMeans 电影分群。"),
             ("输出层", "保存 CSV/JSON、PNG 图表、Word 报告和 PDF 报告。"),
         ],
     )
 
-    doc.add_heading("8. 局限性", level=1)
+    doc.add_section(WD_SECTION_START.NEW_PAGE)
+    doc.add_heading("9. 局限性", level=1)
     add_bullets(
         doc,
         [
             "榜单数据代表公开页面的一次快照，不能直接外推到全部电影市场。",
             "类型与国家/地区为多值字段，当前按出现次数统计。",
-            "当前项目以探索性分析为主，后续可加入交互式看板、自动化 CI 和更丰富的文本分析。",
+            "机器学习扩展使用小样本高分榜单数据，适合展示建模流程与特征解释，不适合作为真实评分预测系统。",
+            "后续可加入交互式看板、自动化 CI 和更丰富的文本分析。",
         ],
     )
 

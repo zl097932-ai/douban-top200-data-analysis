@@ -1,0 +1,189 @@
+{
+  "generated_at": "2026-07-05T14:49:51+08:00",
+  "feature_scope": {
+    "numeric_features": [
+      "year",
+      "movie_age",
+      "log_rating_count",
+      "genre_count",
+      "country_count"
+    ],
+    "top_genres": [
+      "剧情",
+      "喜剧",
+      "爱情",
+      "冒险",
+      "奇幻",
+      "犯罪",
+      "动画",
+      "惊悚",
+      "悬疑",
+      "动作",
+      "科幻",
+      "家庭"
+    ],
+    "top_countries": [
+      "美国",
+      "英国",
+      "日本",
+      "中国香港",
+      "中国大陆",
+      "法国",
+      "韩国",
+      "意大利",
+      "德国",
+      "中国台湾"
+    ]
+  },
+  "model_summary": {
+    "task": "rating prediction",
+    "target": "Douban rating",
+    "validation": "5-fold cross validation, shuffled with random_state=42",
+    "sample_size": 200,
+    "models": {
+      "Baseline mean rating": {
+        "mae_mean": 0.2034,
+        "mae_std": 0.0189,
+        "rmse_mean": 0.2426,
+        "r2_mean": -0.0088
+      },
+      "Ridge regression": {
+        "mae_mean": 0.17,
+        "mae_std": 0.0133,
+        "rmse_mean": 0.2172,
+        "r2_mean": 0.1814
+      },
+      "Random forest": {
+        "mae_mean": 0.1459,
+        "mae_std": 0.0151,
+        "rmse_mean": 0.1837,
+        "r2_mean": 0.4171
+      }
+    },
+    "best_model": "Random forest",
+    "best_mae": 0.1459,
+    "baseline_mae": 0.2034,
+    "mae_improvement_vs_baseline": 0.0575,
+    "note": "Top200 样本量小且评分范围窄，模型用于探索特征关系，不作为真实评分预测服务。"
+  },
+  "feature_importance": [
+    {
+      "feature": "log_rating_count",
+      "display_name": "评价人数（对数）",
+      "importance": 0.07977,
+      "importance_std": 0.00491
+    },
+    {
+      "feature": "year",
+      "display_name": "上映年份",
+      "importance": 0.02904,
+      "importance_std": 0.00326
+    },
+    {
+      "feature": "movie_age",
+      "display_name": "距今年数",
+      "importance": 0.02904,
+      "importance_std": 0.00329
+    },
+    {
+      "feature": "genre_count",
+      "display_name": "类型标签数",
+      "importance": 0.01578,
+      "importance_std": 0.00272
+    },
+    {
+      "feature": "genre_剧情",
+      "display_name": "类型：剧情",
+      "importance": 0.00765,
+      "importance_std": 0.00156
+    },
+    {
+      "feature": "genre_爱情",
+      "display_name": "类型：爱情",
+      "importance": 0.00559,
+      "importance_std": 0.00128
+    },
+    {
+      "feature": "country_中国香港",
+      "display_name": "地区：中国香港",
+      "importance": 0.00443,
+      "importance_std": 0.00098
+    },
+    {
+      "feature": "country_count",
+      "display_name": "国家/地区数",
+      "importance": 0.00353,
+      "importance_std": 0.00074
+    },
+    {
+      "feature": "genre_犯罪",
+      "display_name": "类型：犯罪",
+      "importance": 0.00187,
+      "importance_std": 0.00033
+    },
+    {
+      "feature": "genre_喜剧",
+      "display_name": "类型：喜剧",
+      "importance": 0.00184,
+      "importance_std": 0.00038
+    },
+    {
+      "feature": "country_美国",
+      "display_name": "地区：美国",
+      "importance": 0.00148,
+      "importance_std": 0.00028
+    },
+    {
+      "feature": "country_德国",
+      "display_name": "地区：德国",
+      "importance": 0.00106,
+      "importance_std": 0.0002
+    }
+  ],
+  "cluster_profiles": [
+    {
+      "cluster": 3,
+      "profile": "华语剧情高口碑片",
+      "movie_count": 26,
+      "average_rating": 8.946,
+      "average_year": 1998.3,
+      "average_rating_count": 1049897,
+      "top_genres": "剧情、爱情、喜剧",
+      "top_countries": "中国香港、中国大陆、美国",
+      "example_titles": "霸王别姬、背靠背，脸对脸、活着、鬼子来了"
+    },
+    {
+      "cluster": 2,
+      "profile": "欧美剧情经典片",
+      "movie_count": 98,
+      "average_rating": 9.074,
+      "average_year": 1999.1,
+      "average_rating_count": 889640,
+      "top_genres": "剧情、爱情、喜剧",
+      "top_countries": "美国、日本、法国",
+      "example_titles": "肖申克的救赎、泰坦尼克号、阿甘正传、美丽人生"
+    },
+    {
+      "cluster": 1,
+      "profile": "悬疑惊悚与犯罪片",
+      "movie_count": 31,
+      "average_rating": 8.91,
+      "average_year": 2001.1,
+      "average_rating_count": 891645,
+      "top_genres": "惊悚、剧情、悬疑",
+      "top_countries": "美国、英国、韩国",
+      "example_titles": "控方证人、盗梦空间、无间道、蝙蝠侠：黑暗骑士"
+    },
+    {
+      "cluster": 0,
+      "profile": "动画奇幻与冒险片",
+      "movie_count": 45,
+      "average_rating": 8.978,
+      "average_year": 2003.5,
+      "average_rating_count": 1031672,
+      "top_genres": "冒险、奇幻、动画",
+      "top_countries": "美国、日本、英国",
+      "example_titles": "千与千寻、星际穿越、大闹天宫、疯狂动物城"
+    }
+  ]
+}
